@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "esnext",               // Vite 会处理模块转换，这里保留 ESNext
+    "lib": ["ES2020", "DOM"],
+    "declaration": true,              // 生成 .d.ts 类型声明
+    "rootDir": "./src",
+    "declarationDir": "./dist/types", // 声明文件输出目录
+    "emitDeclarationOnly": true,      // 只生成类型声明，不生成 JS
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "bundler"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
