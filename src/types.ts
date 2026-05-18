@@ -19,7 +19,11 @@ export interface MetaOutV10 extends MetaOut {
     meta_in: Base64String,
 }
 
-export interface MetaInV1 {
+export interface MetaIn {
+    schema_in: number
+}
+
+export interface MetaInV1 extends MetaIn {
     /** Must be 1 */
     schema_in: number,
     /** base64(random(bytes=12)) */

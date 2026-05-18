@@ -5,7 +5,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'),
-      name: 'HelloViteLib',          // UMD 格式的全局变量名（本例未用 UMD，但指定无妨）
+      name: 'f017c7icu',          // UMD 格式的全局变量名（本例未用 UMD，但指定无妨）
       fileName: (format) => {
         // ESM 输出为 index.mjs，CJS 输出为 index.cjs
         if (format === 'es') return 'index.mjs';

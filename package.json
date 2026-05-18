@@ -20,5 +20,10 @@
     "@types/node": "^25.8.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.13"
+  },
+  "dependencies": {
+    "@noble/ciphers": "^2.2.0",
+    "@noble/hashes": "^2.2.0",
+    "js-base64": "^3.7.8"
   }
 }

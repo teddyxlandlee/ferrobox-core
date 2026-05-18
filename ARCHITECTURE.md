@@ -9,7 +9,16 @@ FerroBox是一个对称加密存储文件的工具链，可在浏览器等客户
 一个FerroBox实现会存储两种数据：Meta和Data。
 
 ## Data
-Data是原数据（raw_data）通过ChaCha20Poly1305加密后的二进制数据。
+Data是原数据（raw_data）通过分段 ChaCha20-Poly1305 AEAD 加密后的二进制数据。
+
+每个 Data 记录采用固定 64KiB 分块加密，记录格式为：
+
+- `record_length`：4 字节大端整数，表示本条记录的 ciphertext 长度
+- `ciphertext`：记录的加密数据
+- `tag`：16 字节 ChaCha20-Poly1305 认证标签
+
+每个记录使用独立 nonce，nonce 从 `nonce_in` 派生，记录号 `record_index` 作为 AAD。
+这保证了每条记录都是“先验证、后输出”的安全流式处理。
 
 ## Meta
 Meta是JSON对象格式的文档，它的slug是访问对应文件的路径。
