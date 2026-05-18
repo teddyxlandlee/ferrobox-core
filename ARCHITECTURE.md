@@ -57,4 +57,6 @@ Meta的格式如下：
 }
 ```
 
+`data_in` 可以是直接指向加密数据的服务器 URL，也可以是包含加密内容的 `data:` URL。对于小文件，推荐将其编码为 `data:` URL；对于大文件，则上传到后端服务器。通常的实现方式是在 `engine.uploadData` 里根据大小设定阈值，超过阈值时使用服务器存储，低于阈值时返回 `data:` URL。
+
 Data和meta_in加密时使用的key为同一个key，nonce为不同的nonce。

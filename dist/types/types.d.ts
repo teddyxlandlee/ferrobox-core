@@ -54,3 +54,14 @@ export type DecryptResult = typeof TransformStream.prototype.readable;
 export type DataUploadRequest = (input: EncryptResult) => Promise<string>;
 /** @returns slug */
 export type MetaUploadRequest = (input: MetaOutV10) => Promise<string>;
+export type PadRule = ((originalSize: number) => number) | null | number;
+export interface UploadExtraArgs {
+    mime?: string;
+    /**
+     *  @returns null -> no padding;
+     *           undefined -> use default;
+     *           number -> constant;
+     *           function -> use the returned value as target size
+     */
+    metaPadRule?: PadRule;
+}

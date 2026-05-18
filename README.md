@@ -44,11 +44,16 @@ const data = new TextEncoder().encode('Secret content')
 // Encrypt data
 const encryptResult = await encrypt(data)
 
-// Upload to your backend
+const UPLOAD_THRESHOLD = 512;
+
+// Upload to your backend or return a data URL
 const uploadEngine = {
   async uploadData(input) {
     const encryptedBytes = await streamToUint8Array(input.encodedStream)
-    return await yourBackend.uploadData(encryptedBytes)
+    if (encryptedBytes.byteLength > UPLOAD_THRESHOLD) {
+      return await yourBackend.uploadData(encryptedBytes)
+    }
+    return `data:application/octet-stream;base64,${base64Encode(encryptedBytes)}`
   },
   async uploadMeta(metaOut) {
     return await yourBackend.uploadMeta(metaOut)
@@ -83,7 +88,7 @@ Encrypts a stream or Blob with random key and nonce.
 
 #### `upload(input: EncryptInput, engine: UploadEngine, extra?: { mime?: string }): Promise<string>`
 
-Encrypts data, uploads to backend, and returns metadata slug.
+Encrypts data, then calls `engine.uploadData` to store the encrypted payload. That function may upload the data to a real server or return a `data:` URL instead. If your application prefers a hybrid strategy, use a size threshold in `engine.uploadData`: upload large payloads to the server, and encode small payloads as a data URL.
 
 #### `download(metaOut: MetaOut, key: Uint8Array): Promise<DecryptResult>`
 
@@ -150,11 +155,16 @@ const data = new TextEncoder().encode('秘密内容')
 // 加密数据
 const encryptResult = await encrypt(data)
 
-// 上传到后端
+// 上传到后端或返回 data URL
+const UPLOAD_THRESHOLD = 512;
+
 const uploadEngine = {
   async uploadData(input) {
     const encryptedBytes = await streamToUint8Array(input.encodedStream)
-    return await yourBackend.uploadData(encryptedBytes)
+    if (encryptedBytes.byteLength > UPLOAD_THRESHOLD) {
+      return await yourBackend.uploadData(encryptedBytes)
+    }
+    return `data:application/octet-stream;base64,${base64Encode(encryptedBytes)}`
   },
   async uploadMeta(metaOut) {
     return await yourBackend.uploadMeta(metaOut)
@@ -189,7 +199,7 @@ const plaintext = await streamToUint8Array(decryptedStream)
 
 #### `upload(input: EncryptInput, engine: UploadEngine, extra?: { mime?: string }): Promise<string>`
 
-加密数据、上传到后端，返回元数据 slug。
+加密数据后会调用 `engine.uploadData` 来存储加密后的内容。该函数可以上传到真正的服务器，也可以返回 `data:` URL。推荐根据数据大小设定阈值：较大时上传到服务器，较小时保留为 data URL。
 
 #### `download(metaOut: MetaOut, key: Uint8Array): Promise<DecryptResult>`
 

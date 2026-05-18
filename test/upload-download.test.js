@@ -64,7 +64,7 @@ async function main() {
     const dataSlug = randomSlug('data')
     const metaSlug = randomSlug('meta')
     const dataFilePath = join(tempDir, `${dataSlug}.bin`)
-    const metaFilePath = join(tempDir, `${metaSlug}.json`)
+    const metaFilePath = (mode) => join(tempDir, `${metaSlug}@${mode}.json`)
 
     // start a tiny static HTTP server to serve files from tempDir
     const http = await import('node:http')
@@ -108,7 +108,7 @@ async function main() {
         },
         async uploadMeta(metaOut) {
           savedMetaOut = metaOut
-          await writeFile(metaFilePath, JSON.stringify(metaOut, null, 2))
+          await writeFile(metaFilePath(mode), JSON.stringify(metaOut, null, 2))
           return metaSlug
         }
       }
@@ -135,7 +135,11 @@ async function main() {
       if (server && typeof server.close === 'function') {
         server.close()
       }
-      await rm(tempDir, { recursive: true, force: true })
+      if (!process.env.KEEP_FERROBOX_TEMP) {
+        await rm(tempDir, { recursive: true, force: true })
+      } else {
+        console.log(`Temp directory preserved at ${tempDir} due to KEEP_FERROBOX_TEMP env var`)
+      }
     }
 }
 

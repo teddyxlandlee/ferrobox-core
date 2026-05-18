@@ -2,12 +2,15 @@ import {
     DataUploadRequest,
     DecryptInput, DecryptResult,
     EncryptInput, EncryptResult,
-    MetaIn, MetaInV1, MetaOut, MetaOutV10, MetaUploadRequest
+    MetaIn, MetaInV1, MetaOut, MetaOutV10, MetaUploadRequest,
+    PadRule,
+    UploadExtraArgs,
 } from './types.js'
 
 import { chacha20poly1305 } from '@noble/ciphers/chacha.js'
 import { Base64 } from 'js-base64'
 import { encrypt as streamEncrypt, decrypt as streamDecrypt } from './cipher-stream.js'
+import { randomBytes } from '@noble/ciphers/utils.js'
 
 async function encrypt(input: EncryptInput): Promise<EncryptResult> {
     return streamEncrypt(input)
@@ -19,7 +22,7 @@ async function upload(
         uploadMeta: MetaUploadRequest,
         uploadData: DataUploadRequest
     },
-    extra?: { mime?: string }
+    extra?: UploadExtraArgs
 ): Promise<string> {
     const encryptResult = await encrypt(input)
     const dataUri = await engine.uploadData(encryptResult)
@@ -30,7 +33,7 @@ async function upload(
 async function createMetaOut(
     meta: EncryptResult,
     dataUri: string,
-    extra?: { mime?: string }
+    extra?: UploadExtraArgs
 ): Promise<MetaOutV10> {
     const rawMetaIn = {
         schema_in: 1,
@@ -43,13 +46,41 @@ async function createMetaOut(
 
     const rawMetaInJson = JSON.stringify(rawMetaIn)
     const cipherOut = chacha20poly1305(meta.key, meta.nonceOut)
-    const metaInCiphertext = cipherOut.encrypt(new TextEncoder().encode(rawMetaInJson))
+    const metaInCiphertext = cipherOut.encrypt(randomPad(
+        new TextEncoder().encode(rawMetaInJson),
+        extra?.metaPadRule,
+    ))
+    // const paddedMetaInCiphertext = randomPad(metaInCiphertext, extra?.metaPadRule)
 
     return {
         schema_out: 10,
         nonce_out: Base64.fromUint8Array(meta.nonceOut),
         meta_in: Base64.fromUint8Array(metaInCiphertext)
     }
+}
+
+function randomPad(original: Uint8Array, padRule: PadRule | undefined): Uint8Array {
+    if (padRule === null) {
+        return original;
+    } else if (padRule === undefined) {
+        padRule = (size: number) => Math.ceil(size / 1024) * 1024
+    } else if (typeof padRule === 'number') {
+        padRule = (size: number) => size;
+    }
+    const originalSize = original.length;
+    const targetSize = padRule(originalSize);
+    if (targetSize <= originalSize) return original;
+
+    const padding = randomBytes(targetSize - originalSize);
+    return concatUint8(original, padding);
+}
+
+function concatUint8(a: Uint8Array, b: Uint8Array | ArrayBufferLike): Uint8Array {
+    const bArr = b instanceof Uint8Array ? b : new Uint8Array(b as ArrayBufferLike)
+    const result = new Uint8Array(a.length + bArr.length)
+    result.set(a, 0)
+    result.set(bArr, a.length)
+    return result
 }
 
 async function decrypt(input: DecryptInput): Promise<DecryptResult> {

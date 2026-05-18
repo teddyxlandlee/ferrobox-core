@@ -763,21 +763,31 @@ async function Et(e, t, n) {
 		hash: J.fromUint8Array(e.sha512Hash),
 		size: e.size,
 		mime: n?.mime
-	}, i = JSON.stringify(r), a = B(e.key, e.nonceOut).encrypt(new TextEncoder().encode(i));
+	}, i = JSON.stringify(r), a = B(e.key, e.nonceOut).encrypt(Dt(new TextEncoder().encode(i), n?.metaPadRule));
 	return {
 		schema_out: 10,
 		nonce_out: J.fromUint8Array(e.nonceOut),
 		meta_in: J.fromUint8Array(a)
 	};
 }
-async function Dt(e) {
+function Dt(e, t) {
+	if (t === null) return e;
+	t === void 0 ? t = (e) => Math.ceil(e / 1024) * 1024 : typeof t == "number" && (t = (e) => e);
+	let n = e.length, r = t(n);
+	return r <= n ? e : Ot(e, b(r - n));
+}
+function Ot(e, t) {
+	let n = t instanceof Uint8Array ? t : new Uint8Array(t), r = new Uint8Array(e.length + n.length);
+	return r.set(e, 0), r.set(n, e.length), r;
+}
+async function kt(e) {
 	return St(e);
 }
-async function Ot(e, t) {
-	if (!Mt(e)) throw Error("Unsupported metadata schema version");
-	let n = J.toUint8Array(e.nonce_out), r = J.toUint8Array(e.meta_in), i = B(t, n).decrypt(r), a = kt(new TextDecoder().decode(i));
-	return At(a), St({
-		data: await jt(a.data_in),
+async function At(e, t) {
+	if (!Pt(e)) throw Error("Unsupported metadata schema version");
+	let n = J.toUint8Array(e.nonce_out), r = J.toUint8Array(e.meta_in), i = B(t, n).decrypt(r), a = jt(new TextDecoder().decode(i));
+	return Mt(a), St({
+		data: await Nt(a.data_in),
 		key: t,
 		nonce: J.toUint8Array(a.nonce_in),
 		verification: {
@@ -786,7 +796,7 @@ async function Ot(e, t) {
 		}
 	});
 }
-function kt(e) {
+function jt(e) {
 	if (typeof e != "string" || e.length === 0 || e[0] !== "{") throw Error("Invalid JSON: not an object");
 	let t = 0, n = !1, r = !1;
 	for (let i = 0; i < e.length; i++) {
@@ -801,7 +811,7 @@ function kt(e) {
 	}
 	throw Error("Failed to parse raw_meta_in JSON");
 }
-function At(e) {
+function Mt(e) {
 	if (e.schema_in !== 1) throw Error("Unsupported raw_meta_in schema version");
 	let t = e;
 	if (typeof t.data_in != "string") throw Error("raw_meta_in.data_in must be a string");
@@ -809,7 +819,7 @@ function At(e) {
 	if (typeof t.hash != "string") throw Error("raw_meta_in.hash must be a base64 string");
 	if (typeof t.size != "number") throw Error("raw_meta_in.size must be a number");
 }
-async function jt(e) {
+async function Nt(e) {
 	if (e.startsWith("data:")) {
 		let t = e.indexOf(",");
 		if (t < 0) throw Error("Invalid data URL");
@@ -823,8 +833,8 @@ async function jt(e) {
 	if (!t.body) throw Error("Fetch response has no body");
 	return t.body;
 }
-function Mt(e) {
+function Pt(e) {
 	return e.schema_out === 10 && "nonce_out" in e && "meta_in" in e;
 }
 //#endregion
-export { Dt as decrypt, Ot as download, wt as encrypt, Tt as upload };
+export { kt as decrypt, At as download, wt as encrypt, Tt as upload };
