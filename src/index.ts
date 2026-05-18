@@ -2,30 +2,54 @@ import {
     DataUploadRequest,
     DecryptInput, DecryptResult,
     EncryptInput, EncryptResult,
-    MetaGenerator, MetaIn, MetaInV1, MetaOut, MetaOutV10, MetaUploadRequest
+    MetaIn, MetaInV1, MetaOut, MetaOutV10, MetaUploadRequest
 } from './types.js'
 
 import { chacha20poly1305 } from '@noble/ciphers/chacha.js'
 import { Base64 } from 'js-base64'
 import { encrypt as streamEncrypt, decrypt as streamDecrypt } from './cipher-stream.js'
 
-async function encrypt(input: EncryptInput, extra?: { mime?: string }): Promise<EncryptResult> {
-    return streamEncrypt(input, extra)
+async function encrypt(input: EncryptInput): Promise<EncryptResult> {
+    return streamEncrypt(input)
 }
 
 async function upload(
     input: EncryptInput,
     engine: {
         uploadMeta: MetaUploadRequest,
-        uploadData: DataUploadRequest,
-        genMeta: MetaGenerator
+        uploadData: DataUploadRequest
     },
     extra?: { mime?: string }
 ): Promise<string> {
-    const encryptResult = await encrypt(input, extra)
+    const encryptResult = await encrypt(input)
     const dataUri = await engine.uploadData(encryptResult)
-    const metaOut = await engine.genMeta(encryptResult, dataUri)
+    const metaOut = await createMetaOut(encryptResult, dataUri, extra)
     return engine.uploadMeta(metaOut)
+}
+
+async function createMetaOut(
+    meta: EncryptResult,
+    dataUri: string,
+    extra?: { mime?: string }
+): Promise<MetaOutV10> {
+    const rawMetaIn = {
+        schema_in: 1,
+        nonce_in: Base64.fromUint8Array(meta.nonceIn),
+        data_in: dataUri,
+        hash: Base64.fromUint8Array(meta.sha512Hash),
+        size: meta.size,
+        mime: extra?.mime
+    }
+
+    const rawMetaInJson = JSON.stringify(rawMetaIn)
+    const cipherOut = chacha20poly1305(meta.key, meta.nonceOut)
+    const metaInCiphertext = cipherOut.encrypt(new TextEncoder().encode(rawMetaInJson))
+
+    return {
+        schema_out: 10,
+        nonce_out: Base64.fromUint8Array(meta.nonceOut),
+        meta_in: Base64.fromUint8Array(metaInCiphertext)
+    }
 }
 
 async function decrypt(input: DecryptInput): Promise<DecryptResult> {

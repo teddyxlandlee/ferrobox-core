@@ -261,7 +261,7 @@ export async function pumpDecrypt(
     }
 }
 
-export async function encrypt(input: EncryptInput, extra?: { mime?: string }): Promise<EncryptResult> {
+export async function encrypt(input: EncryptInput): Promise<EncryptResult> {
     const key = randomBytes(32)
     const nonceIn = randomBytes(12)
     const nonceOut = randomBytes(12)

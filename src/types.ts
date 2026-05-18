@@ -69,6 +69,5 @@ export type DecryptResult = typeof TransformStream.prototype.readable;
 // web api
 /** @returns data uri */
 export type DataUploadRequest = (input: EncryptResult) => Promise<string>
-export type MetaGenerator = (input: EncryptMeta, dataUri: string) => Promise<MetaOutV10>
 /** @returns slug */
 export type MetaUploadRequest = (input: MetaOutV10) => Promise<string>
