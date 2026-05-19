@@ -1,4 +1,5 @@
 import {
+    DataSourceResolver,
     DataUploadRequest,
     DecryptInput, DecryptResult,
     EncryptInput, EncryptResult,
@@ -87,7 +88,7 @@ async function decrypt(input: DecryptInput): Promise<DecryptResult> {
     return streamDecrypt(input)
 }
 
-async function download(metaOut: MetaOut, key: Uint8Array): Promise<DecryptResult> {
+async function download(metaOut: MetaOut, key: Uint8Array, resolveDataStream: DataSourceResolver = defaultFetchDataSource): Promise<DecryptResult> {
     if (!isMetaOutV10(metaOut)) {
         throw new Error('Unsupported metadata schema version')
     }
@@ -100,7 +101,7 @@ async function download(metaOut: MetaOut, key: Uint8Array): Promise<DecryptResul
     const metaJson = parseJsonRoot<MetaIn>(rawMetaInText)
     validateMetaInV1(metaJson)
 
-    const source = await fetchDataSource(metaJson.data_in)
+    const source = await resolveDataStream(metaJson.data_in)
     return streamDecrypt({
         data: source,
         key,
@@ -169,7 +170,7 @@ function validateMetaInV1(meta: MetaIn): asserts meta is MetaInV1 {
     }
 }
 
-async function fetchDataSource(dataIn: string): Promise<ReadableStream<Uint8Array>> {
+async function defaultFetchDataSource(dataIn: string): Promise<ReadableStream<Uint8Array>> {
     if (dataIn.startsWith('data:')) {
         const commaIndex = dataIn.indexOf(',')
         if (commaIndex < 0) {
@@ -203,4 +204,4 @@ function isMetaOutV10(meta: MetaOut): meta is MetaOutV10 {
     return meta.schema_out === 10 && 'nonce_out' in meta && 'meta_in' in meta
 }
 
-export { encrypt, upload, decrypt, download }
+export { encrypt, upload, decrypt, download, defaultFetchDataSource }

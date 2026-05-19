@@ -783,16 +783,16 @@ function Ot(e, t) {
 async function kt(e) {
 	return St(e);
 }
-async function At(e, t) {
+async function At(e, t, n = Nt) {
 	if (!Pt(e)) throw Error("Unsupported metadata schema version");
-	let n = J.toUint8Array(e.nonce_out), r = J.toUint8Array(e.meta_in), i = B(t, n).decrypt(r), a = jt(new TextDecoder().decode(i));
-	return Mt(a), St({
-		data: await Nt(a.data_in),
+	let r = J.toUint8Array(e.nonce_out), i = J.toUint8Array(e.meta_in), a = B(t, r).decrypt(i), o = jt(new TextDecoder().decode(a));
+	return Mt(o), St({
+		data: await n(o.data_in),
 		key: t,
-		nonce: J.toUint8Array(a.nonce_in),
+		nonce: J.toUint8Array(o.nonce_in),
 		verification: {
-			sha512Hash: J.toUint8Array(a.hash),
-			size: a.size
+			sha512Hash: J.toUint8Array(o.hash),
+			size: o.size
 		}
 	});
 }
@@ -837,4 +837,4 @@ function Pt(e) {
 	return e.schema_out === 10 && "nonce_out" in e && "meta_in" in e;
 }
 //#endregion
-export { kt as decrypt, At as download, wt as encrypt, Tt as upload };
+export { kt as decrypt, Nt as defaultFetchDataSource, At as download, wt as encrypt, Tt as upload };

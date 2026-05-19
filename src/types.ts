@@ -67,6 +67,7 @@ export interface DecryptInput { // only related to data decryption. irrelevant t
 export type DecryptResult = typeof TransformStream.prototype.readable;
 
 // web api
+// - upload
 /** @returns data uri */
 export type DataUploadRequest = (input: EncryptResult) => Promise<string>
 /** @returns slug */
@@ -84,3 +85,5 @@ export interface UploadExtraArgs {
      */
     metaPadRule?: PadRule,
 }
+// - download
+export type DataSourceResolver = (uri: string) => Promise<ReadableStream<Uint8Array>>;

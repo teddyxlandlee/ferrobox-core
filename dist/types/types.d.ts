@@ -65,3 +65,4 @@ export interface UploadExtraArgs {
      */
     metaPadRule?: PadRule;
 }
+export type DataSourceResolver = (uri: string) => Promise<ReadableStream<Uint8Array>>;
