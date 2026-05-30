@@ -4,7 +4,7 @@ export interface MetaOut {
 }
 export interface MetaOutV10 extends MetaOut {
     /** Must be 10 */
-    schema_out: number;
+    schema_out: 10;
     /** base64(random(bytes=12)) */
     nonce_out: Base64String;
     /** base64(chacha20poly1305(
@@ -20,7 +20,7 @@ export interface MetaIn {
 }
 export interface MetaInV1 extends MetaIn {
     /** Must be 1 */
-    schema_in: number;
+    schema_in: 1;
     /** base64(random(bytes=12)) */
     nonce_in: Base64String;
     /** URI */
